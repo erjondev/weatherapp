@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import * as Location from "expo-location";
-import { API_KEY, BASE_URL } from "../utils/constants";
+import { API_KEY, BASE_URL, BASE_URL_CITY } from "../utils/constants";
 import { WeatherRawData } from "../utils/types";
 
 /**
- * Hooks qui fait l'appel vers l'API OpenWeather
- * @returns [weather, permissionStatus]
+ * Hooks that consume the OpenWeather API
+ * @returns localWeather : object WeatherRawData containing local weather (uses location)
+ * @returns permissionStatus : bool, true location granted
+ * @returns searchCity(city: string) : async method to search the weather of a city given un param
  */
 export default function useWeather() {
-  const [weather, setWeather] = useState<WeatherRawData>();
+  const [localWeather, setLocalWeather] = useState<WeatherRawData>();
   const [permissionStatus, setPermissionStatus] = useState(true);
 
   useEffect(() => {
@@ -23,7 +25,6 @@ export default function useWeather() {
       }
 
       let location = await Location.getCurrentPositionAsync({});
-      //         `${BASE_URL}lat=${location.coords.latitude}&lon=${location.coords.longitude}&APPID=${API_KEY}&units=metric`
 
       let weather: WeatherRawData = await fetch(
         `${BASE_URL}lat=${location.coords.latitude}&lon=${location.coords.longitude}&APPID=${API_KEY}&units=metric`
@@ -33,7 +34,7 @@ export default function useWeather() {
           return data;
         });
 
-      setWeather(weather);
+      setLocalWeather(weather);
     }
 
     let ignore = false;
@@ -44,5 +45,17 @@ export default function useWeather() {
     };
   }, []);
 
-  return [weather, permissionStatus];
+  const searchCity = async (city: string): Promise<WeatherRawData> => {
+    let cityWeather: WeatherRawData = await fetch(
+      `${BASE_URL_CITY}${city}&APPID=${API_KEY}&units=metric`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        return data;
+      });
+
+    return cityWeather;
+  };
+
+  return [localWeather, permissionStatus, searchCity];
 }
