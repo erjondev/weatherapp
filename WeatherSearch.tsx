@@ -1,9 +1,10 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { AntDesign } from "@expo/vector-icons";
 import {
-  Button,
   Image,
+  Pressable,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -27,7 +28,7 @@ export default function WeatherSearch() {
   const localWeather = useSelector((state: WeatherStateType) => state.weather);
 
   const [permissionStatus, coord] = useLocationPerm();
-  const [city, setCity] = useState();
+  const [city, setCity] = useState("");
 
   const handleSearch = () => {
     dispatch(getCityWeatherAction(city));
@@ -48,7 +49,9 @@ export default function WeatherSearch() {
   }
 
   useEffect(() => {
-    dispatch(getWeatherAction(coord));
+    if (coord) {
+      dispatch(getWeatherAction(coord));
+    }
   }, [coord]);
 
   const displayedWeather = data ?? localWeather.data;
@@ -56,13 +59,28 @@ export default function WeatherSearch() {
   return (
     <View style={styles.container}>
       <SafeAreaView>
-        <TextInput
-          style={styles.input}
-          onChangeText={setCity}
-          value={city}
-          placeholder="Search a city"
-        />
-        <Button onPress={handleSearch} title="Search" color="#841584" />
+        <View style={styles.searchbar}>
+          <AntDesign name="search1" size={24} color="black" />
+          <TextInput
+            style={styles.input}
+            onChangeText={setCity}
+            value={city}
+            placeholder="Search a city"
+          />
+          {city && (
+            <Pressable onPress={() => setCity("")}>
+              <AntDesign name="close" size={24} color="black" />
+            </Pressable>
+          )}
+
+          <Pressable style={styles.pressBtn} onPress={handleSearch}>
+            <AntDesign
+              name="find"
+              size={city == "" ? 24 : 40}
+              color={city == "" ? "black" : "#841584"}
+            />
+          </Pressable>
+        </View>
       </SafeAreaView>
       {errors && (
         <Text style={styles.errorMessage}>
@@ -73,7 +91,7 @@ export default function WeatherSearch() {
       {isLoading || localWeather.isLoading ? (
         <Text>Recherche en cours...</Text>
       ) : (
-        <>
+        <View style={styles.weatherInfo}>
           <Image
             style={styles.logo}
             source={{
@@ -81,9 +99,9 @@ export default function WeatherSearch() {
             }}
           />
           <Text style={styles.paragraph}>
-            {displayedWeather?.name} :{displayedWeather?.main?.temp} ° C
+            {displayedWeather?.name} : {displayedWeather?.main?.temp} °C
           </Text>
-        </>
+        </View>
       )}
 
       <StatusBar style="auto" />
@@ -96,6 +114,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
+    justifyContent: "space-evenly",
+  },
+  searchbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#d9dbda",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+  },
+  pressBtn: {
+    marginLeft: 20,
+    width: 50,
+    height: 50,
+    alignItems: "center",
     justifyContent: "center",
   },
   logo: {
@@ -103,17 +135,22 @@ const styles = StyleSheet.create({
     height: 100,
   },
   paragraph: {
-    fontSize: 18,
+    fontSize: 30,
     textAlign: "center",
+  },
+  weatherInfo: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   errorMessage: {
     backgroundColor: "#FAA0A0",
+    padding: 10,
+    borderRadius: 10,
+    fontSize: 18,
   },
   input: {
     height: 40,
-    width: 250,
     margin: 12,
-    borderWidth: 1,
     padding: 10,
   },
 });
