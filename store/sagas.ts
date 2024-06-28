@@ -36,7 +36,6 @@ function* getCityWeatherSaga({ payload: city }: PayloadAction<string>) {
     );
     yield put(getCityWeatherSuccessAction(response.data));
   } catch (error: AxiosError) {
-    console.log("ERROR : ", error.toJSON());
     yield put(getCityWeatherErrorAction(error.code));
   }
 }
